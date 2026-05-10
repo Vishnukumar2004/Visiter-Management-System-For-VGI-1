@@ -1,6 +1,8 @@
-from mongoengine import Document, StringField, DateTimeField, connect
 import os
 from datetime import datetime
+
+import certifi
+from mongoengine import Document, StringField, DateTimeField, connect
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,7 +19,12 @@ def connect_db():
         try:
             # Atlas connection
             print("Connecting to MongoDB Atlas...")
-            connect(host=MONGO_URI, db=DB_NAME)
+            connect(
+                host=MONGO_URI,
+                db=DB_NAME,
+                tlsCAFile=certifi.where(),
+                serverSelectionTimeoutMS=30000,
+            )
             print("Successfully connected to MongoDB Atlas!")
         except Exception as e:
             print(f"Error connecting to MongoDB: {e}")
