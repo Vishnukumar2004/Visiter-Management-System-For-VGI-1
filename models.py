@@ -7,14 +7,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MONGO_URI = os.environ.get("MONGO_URI") or os.environ.get("MONGO_DB")
-DB_NAME = os.environ.get("DB_NAME", "visitor_db")
+def clean_env(value):
+    if not value:
+        return None
+    return value.strip().strip('"').strip("'")
+
+MONGO_URI = clean_env(os.environ.get("MONGO_URI") or os.environ.get("MONGO_DB"))
+DB_NAME = clean_env(os.environ.get("DB_NAME")) or "visitor_db"
+DB_CONNECTED = False
 
 def connect_db():
+    global DB_CONNECTED
+
     if not MONGO_URI:
         # Fallback for local
         print("Connecting to local MongoDB...")
         connect(db=DB_NAME, host="mongodb://localhost:27017/")
+        DB_CONNECTED = True
     else:
         try:
             # Atlas connection
@@ -25,8 +34,10 @@ def connect_db():
                 tlsCAFile=certifi.where(),
                 serverSelectionTimeoutMS=30000,
             )
+            DB_CONNECTED = True
             print("Successfully connected to MongoDB Atlas!")
         except Exception as e:
+            DB_CONNECTED = False
             print(f"Error connecting to MongoDB: {e}")
             raise e
 
