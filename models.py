@@ -1,4 +1,6 @@
 import os
+import ssl
+import sys
 from datetime import datetime
 
 import certifi
@@ -13,8 +15,21 @@ def clean_env(value):
         return None
     return value.strip().strip('"').strip("'")
 
+def env_flag(name, default=False):
+    value = clean_env(os.environ.get(name))
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
+
 MONGO_URI = clean_env(os.environ.get("MONGO_URI") or os.environ.get("MONGO_DB"))
 DB_NAME = clean_env(os.environ.get("DB_NAME")) or "visitor_db"
+MONGO_TLS_ALLOW_INVALID_CERTIFICATES = env_flag(
+    "MONGO_TLS_ALLOW_INVALID_CERTIFICATES"
+)
+MONGO_TLS_DISABLE_OCSP_ENDPOINT_CHECK = env_flag(
+    "MONGO_TLS_DISABLE_OCSP_ENDPOINT_CHECK",
+    True,
+)
 DB_CONNECTED = False
 
 def connect_db():
@@ -32,11 +47,18 @@ def connect_db():
         try:
             # Atlas connection
             print("Connecting to MongoDB Atlas...")
+            print(f"Python runtime: {sys.version.split()[0]}, OpenSSL: {ssl.OPENSSL_VERSION}")
             connect(
                 host=MONGO_URI,
                 db=DB_NAME,
+                tls=True,
                 tlsCAFile=certifi.where(),
+                tlsAllowInvalidCertificates=MONGO_TLS_ALLOW_INVALID_CERTIFICATES,
+                tlsDisableOCSPEndpointCheck=MONGO_TLS_DISABLE_OCSP_ENDPOINT_CHECK,
+                connectTimeoutMS=30000,
+                socketTimeoutMS=30000,
                 serverSelectionTimeoutMS=30000,
+                retryWrites=True,
             )
             get_connection().admin.command("ping")
             DB_CONNECTED = True
