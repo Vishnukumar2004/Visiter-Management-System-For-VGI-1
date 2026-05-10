@@ -13,6 +13,7 @@ import requests
 from dotenv import load_dotenv
 from mongoengine.errors import MongoEngineException
 from pymongo.errors import PyMongoError
+from werkzeug.exceptions import HTTPException
 from werkzeug.security import check_password_hash, generate_password_hash
 
 load_dotenv()
@@ -489,6 +490,19 @@ def database_error(e):
     models.DB_ERROR = str(e)
     logging.exception("Database operation failed")
     return database_failure_response()
+
+
+@app.errorhandler(Exception)
+def application_error(e):
+    if isinstance(e, HTTPException):
+        return e
+
+    logging.exception("Unhandled application error")
+    return {
+        "message": "Internal Server Error",
+        "error": str(e),
+        "database": models.get_database_status(),
+    }, 500
 
 
 # ---------------- RUN ----------------
