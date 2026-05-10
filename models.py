@@ -2,7 +2,7 @@ import os
 import ssl
 import sys
 from datetime import datetime
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import certifi
 from mongoengine import Document, StringField, DateTimeField, connect, disconnect
@@ -44,12 +44,26 @@ def get_mongo_host():
     parsed_uri = urlparse(MONGO_URI)
     return parsed_uri.hostname
 
+def get_mongo_uri_options():
+    if not MONGO_URI:
+        return {}
+
+    parsed_uri = urlparse(MONGO_URI)
+    return {key.lower(): values for key, values in parse_qs(parsed_uri.query).items()}
+
 def get_database_status():
+    uri_options = get_mongo_uri_options()
     return {
         "connected": DB_CONNECTED,
         "db_name": DB_NAME,
         "mongo_uri_configured": bool(MONGO_URI),
         "mongo_host": get_mongo_host(),
+        "mongo_uri_tls_allow_invalid_certificates": (
+            "tlsallowinvalidcertificates" in uri_options
+        ),
+        "mongo_uri_tls_disable_ocsp_endpoint_check": (
+            "tlsdisableocspendpointcheck" in uri_options
+        ),
         "running_on_render": IS_RENDER,
         "tls_disable_ocsp_endpoint_check": MONGO_TLS_DISABLE_OCSP_ENDPOINT_CHECK,
         "tls_allow_invalid_certificates": MONGO_TLS_ALLOW_INVALID_CERTIFICATES,
@@ -78,18 +92,28 @@ def connect_db():
             # Atlas connection
             print("Connecting to MongoDB Atlas...")
             print(f"Python runtime: {sys.version.split()[0]}, OpenSSL: {ssl.OPENSSL_VERSION}")
-            connect(
-                host=MONGO_URI,
-                db=DB_NAME,
-                tls=True,
-                tlsCAFile=certifi.where(),
-                tlsAllowInvalidCertificates=MONGO_TLS_ALLOW_INVALID_CERTIFICATES,
-                tlsDisableOCSPEndpointCheck=MONGO_TLS_DISABLE_OCSP_ENDPOINT_CHECK,
-                connectTimeoutMS=30000,
-                socketTimeoutMS=30000,
-                serverSelectionTimeoutMS=30000,
-                retryWrites=True,
-            )
+            uri_options = get_mongo_uri_options()
+            uri_has_invalid_cert_option = "tlsallowinvalidcertificates" in uri_options
+            uri_has_ocsp_option = "tlsdisableocspendpointcheck" in uri_options
+            connection_options = {
+                "host": MONGO_URI,
+                "db": DB_NAME,
+                "tls": True,
+                "tlsCAFile": certifi.where(),
+                "connectTimeoutMS": 30000,
+                "socketTimeoutMS": 30000,
+                "serverSelectionTimeoutMS": 30000,
+                "retryWrites": True,
+            }
+
+            if MONGO_TLS_ALLOW_INVALID_CERTIFICATES:
+                connection_options["tlsAllowInvalidCertificates"] = True
+            elif not uri_has_invalid_cert_option and not uri_has_ocsp_option:
+                connection_options["tlsDisableOCSPEndpointCheck"] = (
+                    MONGO_TLS_DISABLE_OCSP_ENDPOINT_CHECK
+                )
+
+            connect(**connection_options)
             get_connection().admin.command("ping")
             DB_CONNECTED = True
             DB_ERROR = None
