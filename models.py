@@ -2,7 +2,8 @@ import os
 from datetime import datetime
 
 import certifi
-from mongoengine import Document, StringField, DateTimeField, connect
+from mongoengine import Document, StringField, DateTimeField, connect, disconnect
+from mongoengine.connection import get_connection
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,10 +20,13 @@ DB_CONNECTED = False
 def connect_db():
     global DB_CONNECTED
 
+    disconnect(alias="default")
+
     if not MONGO_URI:
         # Fallback for local
         print("Connecting to local MongoDB...")
         connect(db=DB_NAME, host="mongodb://localhost:27017/")
+        get_connection().admin.command("ping")
         DB_CONNECTED = True
     else:
         try:
@@ -34,6 +38,7 @@ def connect_db():
                 tlsCAFile=certifi.where(),
                 serverSelectionTimeoutMS=30000,
             )
+            get_connection().admin.command("ping")
             DB_CONNECTED = True
             print("Successfully connected to MongoDB Atlas!")
         except Exception as e:

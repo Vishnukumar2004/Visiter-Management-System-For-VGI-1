@@ -3,6 +3,7 @@ import io
 import logging
 import os
 from datetime import date, timedelta
+from functools import wraps
 
 import pandas as pd
 from datetime import datetime
@@ -10,6 +11,8 @@ import models
 from models import Visitor, Admin, connect_db
 import requests
 from dotenv import load_dotenv
+from mongoengine.errors import MongoEngineException
+from pymongo.errors import PyMongoError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 load_dotenv()
@@ -48,8 +51,39 @@ except Exception:
     logging.exception("Default admin seed failed")
 
 
+def ensure_database():
+    if models.DB_CONNECTED:
+        return True
+
+    try:
+        connect_db()
+        if models.DB_CONNECTED:
+            seed_default_admin()
+            return True
+    except Exception:
+        logging.exception("Database reconnect failed")
+
+    return False
+
+
+def database_required(view_func):
+    @wraps(view_func)
+    def wrapped_view(*args, **kwargs):
+        if not ensure_database():
+            return (
+                "Database connection failed. Check Render MONGO_URI and MongoDB Atlas Network Access.",
+                503,
+            )
+        return view_func(*args, **kwargs)
+
+    return wrapped_view
+
+
 @app.route("/health")
 def health():
+    if not models.DB_CONNECTED:
+        ensure_database()
+
     status_code = 200 if models.DB_CONNECTED else 503
     return {
         "status": "ok" if models.DB_CONNECTED else "database_unavailable",
@@ -211,6 +245,7 @@ def visitor_form():
 
 # ---------------- SEND MESSAGE ----------------
 @app.route("/send_message", methods=["POST"])
+@database_required
 def send_message():
     student_name = request.form.get("student_name", "").strip()
     student_number = request.form.get("student_number", "").strip()
@@ -258,6 +293,7 @@ Thanks
 
 # ---------------- BULK MESSAGE ----------------
 @app.route("/bulk_message", methods=["GET", "POST"])
+@database_required
 def bulk_message():
     if not session.get("admin"):
         return redirect("/login")
@@ -313,6 +349,7 @@ def bulk_message():
 
 # ---------------- DASHBOARD ----------------
 @app.route("/dashboard")
+@database_required
 def dashboard():
     if not session.get("admin"):
         return redirect("/login")
@@ -330,6 +367,7 @@ def dashboard():
 
 # ---------------- VIEW VISITORS ----------------
 @app.route("/view_visitors")
+@database_required
 def view_visitors():
     if not session.get("admin"):
         return redirect("/login")
@@ -341,6 +379,7 @@ def view_visitors():
 
 # ---------------- DOWNLOAD FILE ----------------
 @app.route("/download")
+@database_required
 def download():
     visitors = Visitor.objects.order_by('-id')
     
@@ -373,6 +412,7 @@ def download():
 
 # ---------------- DELETE VISITOR FUNCTION ----------------
 @app.route("/delete/<id>")
+@database_required
 def delete_visitor(id):
     if not session.get("admin"):
         return redirect("/login")
@@ -384,6 +424,7 @@ def delete_visitor(id):
 
 # ---------------- EDIT VISITOR ----------------
 @app.route("/edit/<id>", methods=["GET", "POST"])
+@database_required
 def edit_visitor(id):
     if not session.get("admin"):
         return redirect("/login")
@@ -419,6 +460,12 @@ def edit_visitor(id):
 # ---------------- LOGIN METHOD ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST" and not ensure_database():
+        return (
+            "Database connection failed. Check Render MONGO_URI and MongoDB Atlas Network Access.",
+            503,
+        )
+
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
@@ -446,6 +493,17 @@ def logout():
 @app.errorhandler(404)
 def not_found(e):
     return "<h1>Page Not Found</h1>", 404
+
+
+@app.errorhandler(PyMongoError)
+@app.errorhandler(MongoEngineException)
+def database_error(e):
+    models.DB_CONNECTED = False
+    logging.exception("Database operation failed")
+    return (
+        "Database connection failed. Check Render MONGO_URI and MongoDB Atlas Network Access.",
+        503,
+    )
 
 
 # ---------------- RUN ----------------
