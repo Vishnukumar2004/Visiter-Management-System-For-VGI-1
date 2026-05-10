@@ -31,9 +31,10 @@ MONGO_TLS_DISABLE_OCSP_ENDPOINT_CHECK = env_flag(
     True,
 )
 DB_CONNECTED = False
+DB_ERROR = None
 
 def connect_db():
-    global DB_CONNECTED
+    global DB_CONNECTED, DB_ERROR
 
     disconnect(alias="default")
 
@@ -43,6 +44,7 @@ def connect_db():
         connect(db=DB_NAME, host="mongodb://localhost:27017/")
         get_connection().admin.command("ping")
         DB_CONNECTED = True
+        DB_ERROR = None
     else:
         try:
             # Atlas connection
@@ -62,9 +64,11 @@ def connect_db():
             )
             get_connection().admin.command("ping")
             DB_CONNECTED = True
+            DB_ERROR = None
             print("Successfully connected to MongoDB Atlas!")
         except Exception as e:
             DB_CONNECTED = False
+            DB_ERROR = str(e)
             print(f"Error connecting to MongoDB: {e}")
             raise e
 

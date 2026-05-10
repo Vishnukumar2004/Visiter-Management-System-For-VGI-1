@@ -22,12 +22,6 @@ app = Flask(__name__)
 # ---------------- LOGGING ----------------
 logging.basicConfig(level=logging.INFO)
 
-# ---------------- DATABASE ----------------
-try:
-    connect_db()
-except Exception:
-    logging.exception("Database connection failed during startup")
-
 DEFAULT_ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@gmail.com").strip().lower()
 DEFAULT_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin@123")
 
@@ -40,15 +34,6 @@ def seed_default_admin():
             password_hash=generate_password_hash(DEFAULT_ADMIN_PASSWORD)
         ).save()
         logging.info("Default admin created: %s", DEFAULT_ADMIN_EMAIL)
-
-
-try:
-    if models.DB_CONNECTED:
-        seed_default_admin()
-    else:
-        logging.warning("Skipping default admin seed because database is not connected")
-except Exception:
-    logging.exception("Default admin seed failed")
 
 
 def ensure_database():
@@ -87,7 +72,8 @@ def health():
     status_code = 200 if models.DB_CONNECTED else 503
     return {
         "status": "ok" if models.DB_CONNECTED else "database_unavailable",
-        "database": "connected" if models.DB_CONNECTED else "unavailable"
+        "database": "connected" if models.DB_CONNECTED else "unavailable",
+        "error": None if models.DB_CONNECTED else models.DB_ERROR,
     }, status_code
 
 
@@ -499,6 +485,7 @@ def not_found(e):
 @app.errorhandler(MongoEngineException)
 def database_error(e):
     models.DB_CONNECTED = False
+    models.DB_ERROR = str(e)
     logging.exception("Database operation failed")
     return (
         "Database connection failed. Check Render MONGO_URI and MongoDB Atlas Network Access.",
