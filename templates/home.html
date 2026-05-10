@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Visitor Management System</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #030f26;      
+            --bg-mid: #0b224a;       
+            --panel: rgba(14, 38, 79, 0.78);
+            --panel-border: rgba(59, 130, 246, 0.20); 
+            --text-main: #f3f7fc;
+            --text-soft: #94a3b8;
+            --accent: #3b82f6;      
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --shadow: 0 28px 70px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Outfit", sans-serif;
+            color: var(--text-main);
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.15), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.1), transparent 35%),
+                linear-gradient(135deg, var(--bg-dark), var(--bg-mid));
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(115deg, rgba(3, 15, 38, 0.34), rgba(11, 34, 74, 0.12));
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            width: 380px;
+            height: 380px;
+            bottom: -150px;
+            left: -120px;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.15);
+            filter: blur(12px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page-shell {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+        }
+
+        .hero-card {
+            width: min(1080px, 100%);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(16px);
+        }
+
+        .hero-copy,
+        .hero-actions {
+            padding: 42px;
+        }
+
+        .hero-copy {
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent),
+                rgba(255, 255, 255, 0.02);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #93c5fd;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+        }
+
+        h1 {
+            margin: 22px 0 16px;
+            font-size: clamp(2.4rem, 4vw, 4.2rem);
+            line-height: 1;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .lead-text {
+            margin: 0;
+            max-width: 560px;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text-soft);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 34px;
+        }
+
+        .info-tile {
+            padding: 18px;
+            border-radius: 22px;
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+        }
+
+        .info-tile strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .info-tile span {
+            color: var(--text-soft);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: rgba(2, 6, 15, 0.3);
+        }
+
+        .actions-panel {
+            padding: 30px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel-label {
+            display: inline-block;
+            margin-bottom: 10px;
+            color: #60a5fa;
+            font-size: 0.86rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .panel-title {
+            margin: 0 0 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .panel-text {
+            margin: 0 0 24px;
+            color: var(--text-soft);
+            line-height: 1.7;
+        }
+
+        .action-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 16px 18px;
+            border: none;
+            border-radius: 18px;
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+            color: #fff;
+            filter: brightness(1.1);
+        }
+
+        .action-btn span:last-child {
+            opacity: 0.82;
+            font-size: 1.1rem;
+        }
+
+        /* Buttons unified into sleek Institutional Navy/Blue gradients */
+        .btn-visitor {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #0f2b5a, #061530);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-dashboard {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+        }
+
+        .btn-message {
+            background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #475569, #334155);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+        }
+
+        .footer-note {
+            margin-top: 24px;
+            color: #64748b;
+            font-size: 0.92rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 991px) {
+            .hero-card {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-copy,
+            .hero-actions {
+                padding: 32px 24px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .page-shell {
+                padding: 16px;
+            }
+
+            .actions-panel {
+                padding: 22px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .lead-text,
+            .panel-text,
+            .info-tile span {
+                font-size: 0.96rem;
+            }
+
+            .action-btn {
+                padding: 15px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page-shell">
+        <section class="hero-card">
+            <div class="hero-copy">
+                <div class="eyebrow">Campus Reception Portal</div>
+                <h1>Visitor Management System</h1>
+                <p class="lead-text">
+                    A cleaner front desk experience for registering campus visitors, checking records,
+                    and helping the admin team manage daily walk-ins without confusion.
+                </p>
+
+                <div class="info-grid">
+                    <div class="info-tile">
+                        <strong>Quick Entry</strong>
+                        <span>Capture visitor details in a simple form with less effort at reception.</span>
+                    </div>
+                    <div class="info-tile">
+                        <strong>Admin Control</strong>
+                        <span>Review visitors, track activity, and manage communication from one place.</span>
+                    </div>
+                    <div class="info-tile">
+                        <strong>Better Flow</strong>
+                        <span>Designed for desktop and mobile so the page stays clean on every screen.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-actions">
+                <div class="actions-panel">
+                    {% if session.get("admin") %}
+                        <span class="panel-label">Admin Access</span>
+                        <h2 class="panel-title">Manage visitor operations</h2>
+                        <p class="panel-text">
+                            Jump into the dashboard, review visitor records, send bulk updates, or safely sign out.
+                        </p>
+
+                        <div class="action-list">
+                            <a href="{{ url_for('dashboard') }}" class="action-btn btn-dashboard">
+                                <span>Open Dashboard</span>
+                                <span>&rarr;</span>
+                            </a>
+                            <a href="{{ url_for('view_visitors') }}" class="action-btn btn-view">
+                                <span>View Visitors</span>
+                                <span>&rarr;</span>
+                            </a>
+                            <a href="{{ url_for('bulk_message') }}" class="action-btn btn-message">
+                                <span>Bulk Message</span>
+                                <span>&rarr;</span>
+                            </a>
+                            <a href="{{ url_for('logout') }}" class="action-btn btn-logout">
+                                <span>Logout</span>
+                                <span>&rarr;</span>
+                            </a>
+                        </div>
+                    {% else %}
+                        <span class="panel-label">Welcome</span>
+                        <h2 class="panel-title">Choose your next step</h2>
+                        <p class="panel-text">
+                            Visitors can register here, while authorized staff can enter the admin area to manage records.
+                        </p>
+
+                        <div class="action-list">
+                            <a href="{{ url_for('visitor_form') }}" class="action-btn btn-visitor">
+                                <span>Fill Visitor Form</span>
+                                <span>&rarr;</span>
+                            </a>
+                            <a href="{{ url_for('login') }}" class="action-btn btn-login">
+                                <span>Admin Login</span>
+                                <span>&rarr;</span>
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <p class="footer-note">Built to keep reception flow fast, clear, and professional.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

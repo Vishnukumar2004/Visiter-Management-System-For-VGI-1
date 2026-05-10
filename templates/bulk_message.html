@@ -1,0 +1,126 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Bulk Message | Visitor Management System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<style>
+    .form-label {
+        color: var(--text-soft);
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+    
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text-main);
+        padding: 14px 18px;
+        border-radius: 14px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+        color: var(--text-main);
+    }
+    
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.8), rgba(15, 118, 110, 0.9));
+        border: 1px solid rgba(20, 184, 166, 0.4);
+        color: #fff;
+        padding: 16px;
+        border-radius: 14px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        font-size: 0.95rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+        color: #fff;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.9), rgba(15, 118, 110, 1));
+    }
+
+    .header-group {
+        margin-bottom: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 800px;">
+    <div class="header-group">
+        <h2 style="font-weight: 800; font-size: 2rem; margin-bottom: 5px;">📤 Bulk Communication</h2>
+        <p style="color: var(--text-soft);">Send updates or broadcast messages to visitors seamlessly.</p>
+    </div>
+
+    <form action="/bulk_message" method="POST" enctype="multipart/form-data">
+        <div class="mb-4">
+            <label class="form-label">Upload Excel File (.xlsx)</label>
+            <input type="file" name="file" class="form-control" accept=".xlsx">
+        </div>
+        
+        <div class="mb-4">
+            <label class="form-label">Or Enter WhatsApp Numbers manually</label>
+            <textarea name="manual_numbers" rows="3" class="form-control" placeholder="Comma or line-separated numbers"></textarea>
+        </div>
+        
+        <div class="mb-5">
+            <label class="form-label">Message Content</label>
+            <textarea name="message" rows="12" class="form-control" required style="font-family: monospace; font-size: 0.9rem;">Hello Student, 
+
+Welcome to Vikrant Group Of Institutions, Indore.
+
+Thank you very much for visiting the campus.
+
+VGI is running UG & PG courses in Engineering, Management, Nursing, Pharmacy & Law.
+
+Courses approved by UGC, AICTE, PCI, BCI, MPNRC and affiliated to state Govt. Universities.
+
+Scholarship Schemes: https://www.vitm.edu.in/scholarship.html
+Instagram: https://www.instagram.com/vikrant.indore
+
+We hope your visit was inspiring.
+
+Thanks!</textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-submit w-100">Broadcast Messages</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+    window.onload = function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("success") === "1") {
+            Toastify({
+                text: "✅ Bulk Messages Sent Successfully!",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "linear-gradient(to right, #00b09b, #96c93d)",
+                    borderRadius: "10px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    fontFamily: "'Outfit', sans-serif"
+                },
+                close: true
+            }).showToast();
+        }
+    };
+</script>
+{% endblock %}

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #1e3a8a;      /* Deep blue background */
+            --bg-mid: #2563eb;       /* Primary blue background */
+            --sidebar: #1e40af;      /* Solid Blue sidebar */
+            --panel: #ffffff;        /* Solid WHITE cards */
+            --panel-border: #e2e8f0; /* Light gray panel borders */
+            --text-main: #0f172a;    /* Dark text for white cards */
+            --text-soft: #64748b;    /* Medium gray text for white cards */
+            --text-bg: #ffffff;      /* White text for elements directly on the blue background */
+            --accent: #3b82f6;      
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.05); /* Soft shadow for light mode */
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Outfit", sans-serif;
+            color: var(--text-bg); /* Default text for the blue background is white */
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-mid));
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+
+        /* Layout */
+        .admin-shell {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        .admin-sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            background: var(--sidebar);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .brand-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .brand-pill::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #60a5fa;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-grow: 1;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            text-decoration: none;
+            color: #e0e7ff;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: all 0.2s ease;
+            background: transparent;
+            border: 1px solid transparent;
+        }
+
+        .nav-button i {
+            font-size: 1.25rem;
+            opacity: 0.7;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .nav-button:hover {
+            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .nav-button:hover i {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+
+        /* Unified Institutional Blue Active State */
+        .nav-button.active { 
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3); 
+            color: #ffffff; 
+            box-shadow: inset 4px 0 0 #ffffff; 
+        }
+        .nav-button.active i {
+            color: #ffffff;
+            opacity: 1;
+        }
+        
+        .nav-logout {
+            margin-top: auto;
+            background: transparent;
+            color: #fca5a5;
+            opacity: 0.8;
+            border: 1px solid transparent;
+        }
+        
+        .nav-logout:hover {
+            opacity: 1;
+            background: rgba(239, 68, 68, 0.15);
+            color: #fee2e2;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .admin-main {
+            padding: 30px 40px;
+            overflow-y: auto;
+        }
+
+        /* Utilities */
+        .glass-card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+            color: var(--text-main); /* Dark text for white cards */
+        }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .admin-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-sidebar {
+                height: auto;
+                position: relative;
+                padding: 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .sidebar-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                margin-top: 10px;
+            }
+
+            .nav-button {
+                flex: 1 1 200px;
+                justify-content: center;
+            }
+
+            .nav-logout {
+                margin-top: 0;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .admin-main {
+                padding: 15px;
+            }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <div class="admin-shell">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="brand-pill">Admin Workspace</div>
+            
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-button nav-dashboard {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-grid-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <a href="{{ url_for('view_visitors') }}" class="nav-button nav-view {% if request.endpoint == 'view_visitors' or request.endpoint == 'edit_visitor' %}active{% endif %}">
+                    <i class="bi bi-people-fill"></i>
+                    <span>View Visitors</span>
+                </a>
+                
+                <a href="{{ url_for('bulk_message') }}" class="nav-button nav-bulk {% if request.endpoint == 'bulk_message' %}active{% endif %}">
+                    <i class="bi bi-chat-square-text-fill"></i>
+                    <span>Bulk Message</span>
+                </a>
+
+                <!-- Spacing block -->
+                <div style="flex-grow: 1;"></div>
+                
+                <a href="{{ url_for('logout') }}" class="nav-button nav-logout">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,445 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}View Visitors | Visitor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    /* Core Panel */
+    .records-panel {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Search & Filter Ribbon */
+    .filter-ribbon {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .search-wrapper {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .search-wrapper i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 1.1rem;
+    }
+
+    .search-input {
+        width: 100%;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 12px 16px 12px 46px;
+        color: #0f172a;
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .search-input:focus {
+        outline: none;
+        background: #ffffff;
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    }
+
+    .search-input::placeholder {
+        color: #94a3b8;
+    }
+
+    .filter-select {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: #0f172a;
+        font-size: 0.95rem;
+        min-width: 180px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    }
+
+    .filter-select option {
+        background: #ffffff;
+        color: #0f172a;
+    }
+
+    .btn-custom-action {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .btn-custom-action:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .btn-download-primary {
+        background: #dcfce7;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-download-primary:hover {
+        background: #bbf7d0;
+        color: #15803d;
+    }
+
+    /* Table Styles */
+    .table-container {
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    .table {
+        margin-bottom: 0;
+        color: #0f172a;
+    }
+
+    table th {
+        background: #f8fafc !important;
+        color: #475569 !important;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        border-bottom: 1px solid #e2e8f0 !important;
+        padding: 18px 24px !important;
+        border-top: none !important;
+    }
+
+    table td {
+        background: #ffffff !important;
+        color: #1e293b !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        padding: 18px 24px !important;
+        vertical-align: middle;
+    }
+
+    table tbody tr {
+        transition: background-color 0.2s;
+    }
+
+    table tbody tr:hover td {
+        background: #f8fafc !important;
+    }
+
+    /* Avatar Initial */
+    .avatar-circle {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #fff;
+        margin-right: 14px;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+    }
+
+    /* Badges */
+    .badge-course {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    /* Action Icons */
+    .action-icon-btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-edit {
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+    }
+
+    .btn-edit:hover {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .btn-delete {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+        margin-left: 6px;
+    }
+
+    .btn-delete:hover {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        display: none;
+        background: #ffffff;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        color: #e2e8f0;
+        margin-bottom: 16px;
+    }
+
+    /* External body headers for layout pages */
+    .dashboard-header-text {
+        font-weight: 800;
+        font-size: 2.2rem;
+        margin-bottom: 6px;
+        letter-spacing: -0.03em;
+        color: #ffffff;
+    }
+
+    .dashboard-header-sub {
+        color: #e0e7ff;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-group">
+    <div>
+        <h2 class="dashboard-header-text">Visitor Directory</h2>
+        <p class="dashboard-header-sub">Manage, search, and export your facility's registered visitors seamlessly.</p>
+    </div>
+</div>
+
+<div class="records-panel">
+    <!-- Filter Ribbon -->
+    <div class="filter-ribbon">
+        <div class="search-wrapper">
+            <i class="bi bi-search"></i>
+            <input type="text" id="nameSearch" class="search-input" placeholder="Search visitors by name...">
+        </div>
+
+        <select id="courseSearch" class="filter-select">
+            <option value="">All Courses</option>
+            <option value="Engineering">Engineering</option>
+            <option value="Management">Management</option>
+            <option value="Nursing">Nursing</option>
+            <option value="Pharmacy">Pharmacy</option>
+            <option value="Law">Law</option>
+        </select>
+
+        <button class="btn-custom-action" onclick="resetFilters()">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+        </button>
+
+        <div style="flex-grow: 1;"></div>
+
+        <div>
+            <a href="{{ url_for('download') }}" class="btn-download-primary d-inline-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container">
+        <table class="table align-middle" id="visitorTable">
+            <thead>
+                <tr>
+                    <!-- <th style="width: 5%">ID</th> -->
+                    <th style="width: 25%">Visitor Identity</th>
+                    <th style="width: 15%">Phone Number</th>
+                    <th style="width: 15%">Target Course</th>
+                    <th style="width: 25%">Guardian Info</th>
+                    <th style="width: 15%" class="text-end">Operations</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr class="visitor-row">
+                    <!-- <td class="text-secondary fw-medium">#{{ row[0] }}</td> -->
+
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-circle">{{ row[1][0]|upper }}</div>
+                            <div>
+                                <div class="fw-bold text-slate-900 mb-1" style="font-size:1.05rem;">{{ row[1] }}</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td>
+                        <span style="font-family: monospace; font-size: 1rem; color: #475569;">
+                            <i class="bi bi-telephone text-primary me-2" style="font-size: 0.85rem;"></i>{{ row[2] }}
+                        </span>
+                    </td>
+
+                    <td class="course-cell">
+                        <span class="badge-course" data-course="{{ row[3] }}">{{ row[3] }}</span>
+                    </td>
+
+                    <td>
+                        <div style="color: #0f172a; font-weight: 600;">{{ row[4] }}</div>
+                        <div style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">Contact: {{ row[5] }}</div>
+                    </td>
+
+                    <td class="text-end">
+                        <a href="{{ url_for('edit_visitor', id=row[0]) }}" title="Edit Record"
+                            class="action-icon-btn btn-edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <a href="{{ url_for('delete_visitor', id=row[0]) }}" title="Delete Record"
+                            class="action-icon-btn btn-delete"
+                            onclick="return confirm('Please confirm you want to permanently delete this visitor record.')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Empty State Message -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+            <h4 class="text-slate-900 fw-bold mb-2">No visitors found</h4>
+            <p style="color: #64748b;">Try adjusting your search or course filters to find what you're looking for.</p>
+            <button class="btn-custom-action mx-auto mt-3" onclick="resetFilters()">Clear Filters</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Colorful Badges Logic for Light Mode
+    document.addEventListener("DOMContentLoaded", () => {
+        const badges = document.querySelectorAll('.badge-course');
+        badges.forEach(badge => {
+            const course = badge.getAttribute('data-course');
+            let bg, color, border;
+            if (course === 'Engineering') { bg = '#eff6ff'; color = '#2563eb'; border = '#bfdbfe'; }
+            else if (course === 'Nursing') { bg = '#f0fdf4'; color = '#16a34a'; border = '#bbf7d0'; }
+            else if (course === 'Pharmacy') { bg = '#faf5ff'; color = '#9333ea'; border = '#e9d5ff'; }
+            else if (course === 'Management') { bg = '#fffbeb'; color = '#d97706'; border = '#fde68a'; }
+            else if (course === 'Law') { bg = '#fef2f2'; color = '#dc2626'; border = '#fecaca'; }
+            else { bg = '#f8fafc'; color = '#475569'; border = '#e2e8f0'; }
+
+            badge.style.background = bg;
+            badge.style.color = color;
+            badge.style.border = `1px solid ${border}`;
+        });
+    });
+
+    const nameInput = document.getElementById("nameSearch");
+    const courseInput = document.getElementById("courseSearch");
+    const emptyState = document.getElementById("emptyState");
+    const visitorTable = document.getElementById("visitorTable");
+
+    nameInput.addEventListener("keyup", filterTable);
+    courseInput.addEventListener("change", filterTable);
+
+    function filterTable() {
+        let nameFilter = nameInput.value.toLowerCase();
+        let courseFilter = courseInput.value.toLowerCase();
+
+        let rows = document.querySelectorAll("#visitorTable tbody .visitor-row");
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            let name = row.querySelector('.fw-bold').innerText.toLowerCase();
+            let course = row.querySelector('.course-cell').innerText.toLowerCase();
+
+            let matchName = name.includes(nameFilter);
+            let matchCourse = courseFilter === "" || course.includes(courseFilter);
+
+            if (matchName && matchCourse) {
+                row.style.display = "";
+                visibleCount++;
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        // Handle empty state
+        if (visibleCount === 0) {
+            visitorTable.style.display = "none";
+            emptyState.style.display = "block";
+        } else {
+            visitorTable.style.display = "table";
+            emptyState.style.display = "none";
+        }
+    }
+
+    function resetFilters() {
+        nameInput.value = "";
+        courseInput.value = "";
+        filterTable();
+    }
+</script>
+{% endblock %}

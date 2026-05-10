@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Login | Visitor Management System</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #030f26;      
+            --bg-mid: #0b224a;       
+            --panel: rgba(14, 38, 79, 0.78);
+            --panel-border: rgba(59, 130, 246, 0.20); 
+            --text-main: #f3f7fc;
+            --text-soft: #94a3b8;
+            --accent: #3b82f6;      
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --shadow: 0 28px 70px rgba(0, 0, 0, 0.4);
+            --input-bg: rgba(0, 0, 0, 0.15);
+            --input-border: rgba(59, 130, 246, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Outfit", sans-serif;
+            color: var(--text-main);
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.15), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.1), transparent 35%),
+                linear-gradient(135deg, var(--bg-dark), var(--bg-mid));
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            border-radius: 999px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            width: 300px;
+            height: 300px;
+            top: -120px;
+            right: -90px;
+            background: rgba(37, 99, 235, 0.15);
+            filter: blur(12px);
+        }
+
+        body::after {
+            width: 360px;
+            height: 360px;
+            bottom: -150px;
+            left: -120px;
+            background: rgba(56, 189, 248, 0.14);
+            filter: blur(10px);
+        }
+
+        .page-shell {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+        }
+
+        .login-card {
+            width: min(980px, 100%);
+            display: grid;
+            grid-template-columns: 1fr 0.9fr;
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(16px);
+        }
+
+        .info-side,
+        .form-side {
+            padding: 42px;
+        }
+
+        .info-side {
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent),
+                rgba(255, 255, 255, 0.02);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #93c5fd;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+        }
+
+        h1 {
+            margin: 22px 0 14px;
+            font-size: clamp(2.3rem, 4vw, 3.8rem);
+            line-height: 1.02;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .lead-text {
+            margin: 0;
+            color: var(--text-soft);
+            font-size: 1.02rem;
+            line-height: 1.8;
+            max-width: 460px;
+        }
+
+        .feature-list {
+            display: grid;
+            gap: 16px;
+            margin-top: 34px;
+        }
+
+        .feature-item {
+            padding: 18px 20px;
+            border-radius: 22px;
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+        }
+
+        .feature-item strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 1.05rem;
+            color: #e2e8f0;
+        }
+
+        .feature-item span {
+            color: var(--text-soft);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .form-side {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 15, 0.3);
+        }
+
+        .form-panel {
+            width: 100%;
+            max-width: 380px;
+            padding: 30px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel-label {
+            display: inline-block;
+            margin-bottom: 10px;
+            color: #60a5fa;
+            font-weight: 600;
+            font-size: 0.86rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .panel-title {
+            margin: 0 0 8px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .panel-text {
+            margin: 0 0 24px;
+            color: var(--text-soft);
+            line-height: 1.7;
+        }
+
+        .form-label {
+            margin-bottom: 8px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        .form-control {
+            height: 54px;
+            border-radius: 16px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: #fff;
+            padding: 14px 16px;
+        }
+
+        .form-control::placeholder {
+            color: #64748b;
+        }
+
+        .form-control:focus {
+            color: #fff;
+            background: rgba(0, 0, 0, 0.25);
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-login {
+            width: 100%;
+            height: 54px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.05rem;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            margin-top: 5px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.35);
+        }
+
+        .back-link {
+            display: inline-flex;
+            margin-top: 24px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #fff;
+        }
+
+        @media (max-width: 991px) {
+            .login-card {
+                grid-template-columns: 1fr;
+            }
+
+            .info-side,
+            .form-side {
+                padding: 32px 24px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .page-shell {
+                padding: 16px;
+            }
+
+            .form-panel {
+                padding: 22px;
+            }
+
+            h1 {
+                font-size: 2.1rem;
+            }
+
+            .lead-text,
+            .panel-text,
+            .feature-item span {
+                font-size: 0.96rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page-shell">
+        <section class="login-card">
+            <div class="info-side">
+                <div class="eyebrow">Secure Access</div>
+                <h1>Admin login for visitor management</h1>
+                <p class="lead-text">
+                    Sign in to access the dashboard, review visitor records, and manage campus communication
+                    from one clean control panel.
+                </p>
+
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <strong>Dashboard Access</strong>
+                        <span>View total visitors and move quickly through daily front desk tasks.</span>
+                    </div>
+                    <div class="feature-item">
+                        <strong>Record Management</strong>
+                        <span>Open visitor details, track entries, and keep admin work organized.</span>
+                    </div>
+                    <div class="feature-item">
+                        <strong>Fast Workflow</strong>
+                        <span>Built for desktop and mobile so staff can log in comfortably on any screen.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-side">
+                <div class="form-panel">
+                    <span class="panel-label">Admin Portal</span>
+                    <h2 class="panel-title">Welcome back</h2>
+                    <p class="panel-text">Enter your admin email and password to continue.</p>
+
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input id="email" type="email" name="email" class="form-control" placeholder="Enter admin email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input id="password" type="password" name="password" class="form-control" placeholder="Enter password" required>
+                        </div>
+
+                        <button type="submit" class="btn-login">Login</button>
+                    </form>
+
+                    <a href="{{ url_for('home') }}" class="back-link">&larr; Back to home</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

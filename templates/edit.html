@@ -1,0 +1,91 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Edit Visitor | Visitor Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-label {
+        color: var(--text-soft);
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+
+    .btn-update {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(29, 78, 216, 0.9));
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        color: #fff;
+        padding: 14px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-update:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        color: #fff;
+    }
+
+    .btn-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding: 14px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 700px; margin: 0 auto;">
+    <h2 style="font-weight: 800; font-size: 2rem; margin-bottom: 24px;">✏ Edit Visitor Record</h2>
+
+    <form method="POST">
+
+        <div class="mb-4">
+            <label class="form-label">Student Name</label>
+            <input type="text" name="student_name" class="form-control" value="{{ visitor[1] }}" required>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Phone Number</label>
+            <input type="text" name="student_number" class="form-control" value="{{ visitor[2] }}" required pattern="\d{10}" title="Must be exactly 10 digits">
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Course Name</label>
+            <select name="course_name" class="form-select" required>
+                <option value="Engineering" {% if visitor[3] == "Engineering" %}selected{% endif %}>Engineering</option>
+                <option value="Management" {% if visitor[3] == "Management" %}selected{% endif %}>Management</option>
+                <option value="Nursing" {% if visitor[3] == "Nursing" %}selected{% endif %}>Nursing</option>
+                <option value="Pharmacy" {% if visitor[3] == "Pharmacy" %}selected{% endif %}>Pharmacy</option>
+                <option value="Law" {% if visitor[3] == "Law" %}selected{% endif %}>Law</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Parent Name</label>
+            <input type="text" name="parent_name" class="form-control" value="{{ visitor[4] }}" required>
+        </div>
+
+        <div class="mb-5">
+            <label class="form-label">Parent Contact</label>
+            <input type="text" name="parent_contact" class="form-control" value="{{ visitor[5] }}" required>
+        </div>
+
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-update flex-grow-1">Update Record</button>
+            <a href="{{ url_for('view_visitors') }}" class="btn btn-cancel flex-grow-1 text-center text-decoration-none">Cancel</a>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}
