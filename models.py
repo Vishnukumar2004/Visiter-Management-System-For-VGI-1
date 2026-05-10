@@ -2,6 +2,7 @@ import os
 import ssl
 import sys
 from datetime import datetime
+from urllib.parse import urlparse
 
 import certifi
 from mongoengine import Document, StringField, DateTimeField, connect, disconnect
@@ -23,6 +24,9 @@ def env_flag(name, default=False):
 
 MONGO_URI = clean_env(os.environ.get("MONGO_URI") or os.environ.get("MONGO_DB"))
 DB_NAME = clean_env(os.environ.get("DB_NAME")) or "visitor_db"
+IS_RENDER = env_flag("RENDER") or bool(
+    os.environ.get("RENDER_SERVICE_ID") or os.environ.get("RENDER_EXTERNAL_URL")
+)
 MONGO_TLS_ALLOW_INVALID_CERTIFICATES = env_flag(
     "MONGO_TLS_ALLOW_INVALID_CERTIFICATES"
 )
@@ -33,12 +37,36 @@ MONGO_TLS_DISABLE_OCSP_ENDPOINT_CHECK = env_flag(
 DB_CONNECTED = False
 DB_ERROR = None
 
+def get_mongo_host():
+    if not MONGO_URI:
+        return None
+
+    parsed_uri = urlparse(MONGO_URI)
+    return parsed_uri.hostname
+
+def get_database_status():
+    return {
+        "connected": DB_CONNECTED,
+        "db_name": DB_NAME,
+        "mongo_uri_configured": bool(MONGO_URI),
+        "mongo_host": get_mongo_host(),
+        "running_on_render": IS_RENDER,
+        "tls_disable_ocsp_endpoint_check": MONGO_TLS_DISABLE_OCSP_ENDPOINT_CHECK,
+        "tls_allow_invalid_certificates": MONGO_TLS_ALLOW_INVALID_CERTIFICATES,
+        "error": DB_ERROR,
+    }
+
 def connect_db():
     global DB_CONNECTED, DB_ERROR
 
     disconnect(alias="default")
 
     if not MONGO_URI:
+        if IS_RENDER:
+            DB_CONNECTED = False
+            DB_ERROR = "MONGO_URI environment variable is not set on Render."
+            raise RuntimeError(DB_ERROR)
+
         # Fallback for local
         print("Connecting to local MongoDB...")
         connect(db=DB_NAME, host="mongodb://localhost:27017/")

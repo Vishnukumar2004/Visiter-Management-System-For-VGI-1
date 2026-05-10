@@ -51,14 +51,19 @@ def ensure_database():
     return False
 
 
+def database_failure_response():
+    return {
+        "message": "Database connection failed.",
+        "fix": "Check Render environment variables and MongoDB Atlas Network Access.",
+        "database": models.get_database_status(),
+    }, 503
+
+
 def database_required(view_func):
     @wraps(view_func)
     def wrapped_view(*args, **kwargs):
         if not ensure_database():
-            return (
-                "Database connection failed. Check Render MONGO_URI and MongoDB Atlas Network Access.",
-                503,
-            )
+            return database_failure_response()
         return view_func(*args, **kwargs)
 
     return wrapped_view
@@ -72,8 +77,7 @@ def health():
     status_code = 200 if models.DB_CONNECTED else 503
     return {
         "status": "ok" if models.DB_CONNECTED else "database_unavailable",
-        "database": "connected" if models.DB_CONNECTED else "unavailable",
-        "error": None if models.DB_CONNECTED else models.DB_ERROR,
+        "database": models.get_database_status(),
     }, status_code
 
 
@@ -447,10 +451,7 @@ def edit_visitor(id):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST" and not ensure_database():
-        return (
-            "Database connection failed. Check Render MONGO_URI and MongoDB Atlas Network Access.",
-            503,
-        )
+        return database_failure_response()
 
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
@@ -487,10 +488,7 @@ def database_error(e):
     models.DB_CONNECTED = False
     models.DB_ERROR = str(e)
     logging.exception("Database operation failed")
-    return (
-        "Database connection failed. Check Render MONGO_URI and MongoDB Atlas Network Access.",
-        503,
-    )
+    return database_failure_response()
 
 
 # ---------------- RUN ----------------
